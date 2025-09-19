@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Five-Letter Words Filter</title>
+    <style>
+      :root {
+        --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      }
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background: #0b0c10;
+        color: #e5e7eb;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 24px 16px 16px;
+        box-sizing: border-box;
+      }
+      h1 {
+        margin: 0 0 12px 0;
+        font-size: 22px;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+      }
+      p {
+        margin: 0 0 16px 0;
+        color: #cbd5e1;
+      }
+      .controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+      }
+      input[type="text"] {
+        font-family: var(--mono);
+        font-size: 14px;
+        letter-spacing: 0.5px;
+        padding: 8px 10px;
+        border: 1px solid #334155;
+        border-radius: 6px;
+        background: #111827;
+        color: #e5e7eb;
+        outline: none;
+        width: 240px;
+      }
+      input[type="text"]::placeholder { color: #94a3b8; }
+      .count { color: #94a3b8; font-family: var(--mono); font-size: 12px; }
+
+      pre#wordlist {
+        margin: 0;
+        margin-top: 8px;
+        padding: 12px;
+        background: #111827;
+        border: 1px solid #334155;
+        border-radius: 8px;
+        height: calc(100vh - 180px);
+        overflow: auto;
+        white-space: pre;
+        font-family: var(--mono);
+        font-size: 14px;
+        line-height: 1.5;
+        tab-size: 2;
+      }
+      .footer { margin-top: 10px; color: #64748b; font-size: 12px; }
+      a { color: #60a5fa; text-decoration: none; }
+      a:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Five-Letter Words</h1>
+      <p>Enter letters to exclude. Any word containing any of those letters will be removed.</p>
+      <div class="controls">
+        <input id="exclude" type="text" placeholder="Letters to exclude (e.g., aei)" aria-label="Letters to exclude" />
+        <span class="count" id="count">Loading…</span>
+      </div>
+      <pre id="wordlist">Loading…</pre>
+      <div class="footer">
+        Served by FastAPI. Data generated from an English word list.
+      </div>
+    </div>
+
+    <script>
+      const excludeInput = document.getElementById('exclude');
+      const wordlistEl = document.getElementById('wordlist');
+      const countEl = document.getElementById('count');
+      let allWords = [];
+
+      function render(words) {
+        wordlistEl.textContent = words.join('\n');
+        countEl.textContent = `${words.length.toLocaleString()} words`;
+      }
+
+      function filterWords() {
+        const raw = excludeInput.value.toLowerCase();
+        const letters = Array.from(new Set(raw.replace(/[^a-z]/g, '')));
+        if (letters.length === 0) {
+          render(allWords);
+          return;
+        }
+        const filtered = allWords.filter(w => {
+          for (let i = 0; i < letters.length; i++) {
+            if (w.includes(letters[i])) return false;
+          }
+          return true;
+        });
+        render(filtered);
+      }
+
+      excludeInput.addEventListener('input', filterWords);
+
+      async function bootstrap() {
+        try {
+          const res = await fetch('/words.json', { cache: 'no-store' });
+          allWords = await res.json();
+          render(allWords);
+        } catch (err) {
+          wordlistEl.textContent = 'Failed to load words.';
+          countEl.textContent = '';
+          console.error(err);
+        }
+      }
+      bootstrap();
+    </script>
+  </body>
+  </html>
+
+
