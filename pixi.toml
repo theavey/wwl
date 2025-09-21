@@ -2,11 +2,12 @@
 authors = ["Thomas Heavey <thomasjheavey@gmail.com>"]
 channels = ["conda-forge"]
 name = "wwl"
-platforms = ["osx-64", "osx-arm64"]
+platforms = ["osx-64", "osx-arm64", "linux-64"]
 version = "0.1.0"
 
 [tasks]
 serve = "uvicorn app.main:app --reload --host 127.0.0.1 --port 8000"
+serve-0 = "uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
 
 [dependencies]
 python = "*"
