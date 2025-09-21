@@ -28,6 +28,6 @@ Then open `http://127.0.0.1:8000` in your browser.
 
 ## Implementation notes
 
-- The word list is derived at runtime using `wordfreq.top_n_list('en')` and filtered to five-letter ASCII alphabetic words. The result is cached in-process for speed.
+- The word list is derived at runtime using NLTK's WordNet lexical database, extracting unique words from synsets and filtering to five-letter ASCII alphabetic words. This provides a comprehensive dictionary without invalid entries like repeated letters, with more words than the basic word corpus. The result is cached in-process for speed.
 - The frontend fetches `/words.json` once and filters purely client-side for instant interactions.
 

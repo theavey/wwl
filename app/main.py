@@ -1,11 +1,11 @@
 from functools import lru_cache
 from pathlib import Path
-from typing import List
 
+import nltk
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from wordfreq import top_n_list
+from nltk.corpus import wordnet
 
 
 def get_static_dir() -> Path:
@@ -14,10 +14,23 @@ def get_static_dir() -> Path:
 
 
 @lru_cache(maxsize=1)
-def load_five_letter_words() -> List[str]:
-    # Pull a large English word list and filter to five-letter ASCII words
-    words = top_n_list("en", n=1_000_000)
-    filtered = {w.lower() for w in words if len(w) == 5 and w.isascii() and w.isalpha()}
+def load_five_letter_words() -> list[str]:
+    # Download NLTK wordnet corpus if not already present
+    try:
+        nltk.data.find("corpora/wordnet.zip")
+    except LookupError:
+        nltk.download("wordnet", quiet=True)
+
+    # Use clean English word list from WordNet and filter to five-letter words
+    # Extract unique lemma names (words) from all synsets
+    wordnet_words = set()
+    for synset in wordnet.all_synsets():
+        for lemma in synset.lemmas():
+            wordnet_words.add(lemma.name())
+
+    filtered = {
+        w.lower() for w in wordnet_words if len(w) == 5 and w.isascii() and w.isalpha()
+    }
     return sorted(filtered)
 
 
@@ -33,6 +46,6 @@ def index() -> FileResponse:
     return FileResponse(get_static_dir() / "index.html")
 
 
-@app.get("/words.json", response_model=List[str])
-def words_json() -> List[str]:
+@app.get("/words.json", response_model=list[str])
+def words_json() -> list[str]:
     return load_five_letter_words()
